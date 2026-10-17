@@ -1,4 +1,4 @@
-// Auto Deco - single-file Geode mod.
+// Auto Deco - single-file Geode mod (Geode v5).
 // One codebase builds for Windows, Android, macOS and iOS. Geode packs all
 // platform binaries into ONE .geode file and picks the right one at runtime,
 // so there is no "which platform are you on" question needed.
@@ -208,11 +208,12 @@ static void removeLastBatch(EditorUI* ui) {
 // ---------------------------------------------------------------------------
 // Popup with one button per preset
 // ---------------------------------------------------------------------------
-class AutoDecoPopup : public Popup<EditorUI*> {
+class AutoDecoPopup : public Popup {
 protected:
     EditorUI* m_ui = nullptr;
 
-    bool setup(EditorUI* ui) override {
+    bool init(EditorUI* ui) {
+        if (!Popup::init(360.f, 240.f)) return false;
         m_ui = ui;
         this->setTitle(std::string("Auto Deco (") + platformName() + ")");
 
@@ -265,7 +266,7 @@ protected:
 public:
     static AutoDecoPopup* create(EditorUI* ui) {
         auto ret = new AutoDecoPopup();
-        if (ret->initAnchored(360.f, 240.f, ui)) {
+        if (ret->init(ui)) {
             ret->autorelease();
             return ret;
         }
