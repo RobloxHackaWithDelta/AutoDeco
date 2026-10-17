@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <algorithm>
 
 using namespace geode::prelude;
 
@@ -36,11 +37,11 @@ static const char* platformName() {
 //   Grid    = evenly spaced cells with a little jitter
 //   Rays    = thin bars radiating out from the screen center
 // ---------------------------------------------------------------------------
-enum class Layout { Scatter, Grid, Rays };
+enum class DecoLayout { Scatter, Grid, Rays };
 
 struct StylePreset {
     std::string name;
-    Layout layout;
+    DecoLayout layout;
     std::vector<int> ids;            // object IDs used as deco shapes
     std::vector<ccColor3B> palette;  // object colors (one color channel each)
     ccColor3B bg;                    // background color
@@ -52,44 +53,44 @@ struct StylePreset {
     bool spinny;                     // random rotation instead of baseRot
 };
 
-static ccColor3B C(int r, int g, int b) {
+static ccColor3B makeColor(int r, int g, int b) {
     return ccColor3B{ (GLubyte)r, (GLubyte)g, (GLubyte)b };
 }
 
 // NOTE: these palettes are my approximation of each level's vibe, not exact.
 static std::vector<StylePreset> const& getPresets() {
     static std::vector<StylePreset> presets = {
-        { "Thinking Space 2", Layout::Scatter, { 1 },
-          { C(120,170,255), C(190,140,255), C(90,230,255), C(255,255,255) },
-          C(10,12,40), 90, 0.12f, 0.45f, 1.f, 45.f, false },
+        { "Thinking Space 2", DecoLayout::Scatter, { 1 },
+          { makeColor(120,170,255), makeColor(190,140,255), makeColor(90,230,255), makeColor(255,255,255) },
+          makeColor(10,12,40), 90, 0.12f, 0.45f, 1.f, 45.f, false },
 
-        { "Angelicide", Layout::Rays, { 40 },
-          { C(255,250,225), C(255,225,120), C(255,255,255) },
-          C(60,45,20), 36, 0.15f, 0.40f, 6.f, 0.f, false },
+        { "Angelicide", DecoLayout::Rays, { 40 },
+          { makeColor(255,250,225), makeColor(255,225,120), makeColor(255,255,255) },
+          makeColor(60,45,20), 36, 0.15f, 0.40f, 6.f, 0.f, false },
 
-        { "Society", Layout::Grid, { 1 },
-          { C(220,40,50), C(30,30,35), C(140,140,150) },
-          C(18,18,22), 28, 0.5f, 1.0f, 1.f, 0.f, false },
+        { "Society", DecoLayout::Grid, { 1 },
+          { makeColor(220,40,50), makeColor(30,30,35), makeColor(140,140,150) },
+          makeColor(18,18,22), 28, 0.5f, 1.0f, 1.f, 0.f, false },
 
-        { "Neon", Layout::Scatter, { 1 },
-          { C(255,40,180), C(40,240,255), C(170,255,60) },
-          C(5,5,15), 60, 0.2f, 0.8f, 1.f, 45.f, false },
+        { "Neon", DecoLayout::Scatter, { 1 },
+          { makeColor(255,40,180), makeColor(40,240,255), makeColor(170,255,60) },
+          makeColor(5,5,15), 60, 0.2f, 0.8f, 1.f, 45.f, false },
 
-        { "Spooky", Layout::Scatter, { 1, 40 },
-          { C(255,120,20), C(140,60,200), C(90,200,60) },
-          C(12,6,20), 50, 0.2f, 0.9f, 1.f, 0.f, true },
+        { "Spooky", DecoLayout::Scatter, { 1, 40 },
+          { makeColor(255,120,20), makeColor(140,60,200), makeColor(90,200,60) },
+          makeColor(12,6,20), 50, 0.2f, 0.9f, 1.f, 0.f, true },
 
-        { "Minimal", Layout::Grid, { 1 },
-          { C(70,70,80), C(150,150,160) },
-          C(235,235,240), 12, 0.6f, 1.4f, 1.f, 0.f, false },
+        { "Minimal", DecoLayout::Grid, { 1 },
+          { makeColor(70,70,80), makeColor(150,150,160) },
+          makeColor(235,235,240), 12, 0.6f, 1.4f, 1.f, 0.f, false },
 
-        { "Sunset Glow", Layout::Rays, { 40 },
-          { C(255,150,60), C(255,80,140), C(170,80,255) },
-          C(40,10,50), 30, 0.15f, 0.40f, 8.f, 0.f, false },
+        { "Sunset Glow", DecoLayout::Rays, { 40 },
+          { makeColor(255,150,60), makeColor(255,80,140), makeColor(170,80,255) },
+          makeColor(40,10,50), 30, 0.15f, 0.40f, 8.f, 0.f, false },
 
-        { "Deep Ocean", Layout::Scatter, { 1, 40 },
-          { C(20,160,200), C(40,220,200), C(10,90,160) },
-          C(4,20,40), 55, 0.15f, 0.70f, 1.f, 0.f, false },
+        { "Deep Ocean", DecoLayout::Scatter, { 1, 40 },
+          { makeColor(20,160,200), makeColor(40,220,200), makeColor(10,90,160) },
+          makeColor(4,20,40), 55, 0.15f, 0.70f, 1.f, 0.f, false },
     };
     return presets;
 }
@@ -100,11 +101,11 @@ static std::vector<StylePreset> const& getPresets() {
 static std::vector<Ref<GameObject>> g_lastBatch;
 
 static void placeColorTrigger(LevelEditorLayer* lel, int channel, ccColor3B col, CCPoint pos) {
-    auto obj = lel->createObject(899, pos, false);
+    auto obj = lel->createObject(899, pos, true);
     if (!obj) return;
     if (auto trig = typeinfo_cast<EffectGameObject*>(obj)) {
         trig->m_triggerTargetColor = col;
-        trig->m_targetColorID = channel;
+        trig->m_targetGroupID = channel;
         trig->m_duration = 0.f;
     }
     g_lastBatch.push_back(obj);
@@ -112,7 +113,7 @@ static void placeColorTrigger(LevelEditorLayer* lel, int channel, ccColor3B col,
 
 static void placeDeco(LevelEditorLayer* lel, int id, CCPoint pos, float rot,
                       float sx, float sy, int channel, ccColor3B col) {
-    auto obj = lel->createObject(id, pos, false);
+    auto obj = lel->createObject(id, pos, true);
     if (!obj) return;
     obj->m_isNoTouch = true;  // decoration only, never blocks the player
     obj->setRotation(rot);
@@ -160,14 +161,14 @@ static void applyPreset(EditorUI* ui, StylePreset const& p) {
         placeDeco(lel, id, pos, rot, s * p.stretch, s, 101 + ci, p.palette[ci]);
     };
 
-    if (p.layout == Layout::Scatter) {
+    if (p.layout == DecoLayout::Scatter) {
         for (int n = 0; n < p.count; ++n) {
             CCPoint pos(rnd(x0, x0 + w), rnd(y0, y0 + h));
             float rot = p.spinny ? rnd(0.f, 360.f) : p.baseRot;
             makeOne(pos, rot);
         }
     }
-    else if (p.layout == Layout::Grid) {
+    else if (p.layout == DecoLayout::Grid) {
         int cols = std::max(1, (int)std::round(std::sqrt(p.count * w / h)));
         int rows = std::max(1, (int)std::ceil((float)p.count / cols));
         float cw = w / cols;
