@@ -1,6 +1,11 @@
 {
 	"geode": "v5.10.1",
-	"gd": "*",
+	"gd": {
+		"win": "*",
+		"android": "*",
+		"mac": "*",
+		"ios": "*"
+	},
 	"version": "v1.0.0",
 	"id": "fadingxy.autodeco",
 	"name": "Auto Deco",
