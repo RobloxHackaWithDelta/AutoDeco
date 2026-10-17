@@ -1,4 +1,4 @@
-name: AutoDecoBuild
+name: Build Geode Mod
 
 on:
   workflow_dispatch:
@@ -12,10 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: Windows
-            os: windows-latest
-          - name: macOS
-            os: macos-latest
           - name: iOS
             os: macos-latest
             target: iOS
@@ -38,6 +34,7 @@ jobs:
           bindings: geode-sdk/bindings
           bindings-ref: main
           combine: true
+          sdk: latest
           target: ${{ matrix.config.target }}
 
   package:
