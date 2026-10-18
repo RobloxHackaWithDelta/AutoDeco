@@ -990,12 +990,6 @@ protected:
 
     void onPickColor(CCObject* sender) {
         int i = static_cast<CCNode*>(sender)->getTag();
-        setAI(i);
-        refreshAI();
-    }
-
-    void onPickColor(CCObject* sender) {
-        int i = static_cast<CCNode*>(sender)->getTag();
         setAccentIdx(i);
         refreshColor();
         refreshOrb();
